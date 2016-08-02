@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import geoplot
 import matplotlib.pyplot as plt
-import array
 plt.style.use('ggplot')
 
 
@@ -37,35 +36,40 @@ germany = {
     'where_cond': '> 0',
     }
 
-# geometrie = shapefile.Reader('~/temp/deutschland.shp')
+#geometrie = shapefile.Reader("~/temp/deutschland.shp")
 year = 2010
 conn = db.connection()
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
-# print(germany)
+#print(germany)
 #print(germany['geom'])
 geom = geopy.Polygon([(12.2, 52.2), (12.2, 51.6), (13.2, 51.6), (13.2, 52.2)])
 multi_weather = coastdat.get_weather(conn, geom, year)
 my_weather = multi_weather[0]
-print(my_weather.geometry)
-# print(my_weather.data)
-print(len(multi_weather), "-> number of weather objects")
+
+#print(my_weather.geometry)
+#print(my_weather.data)
+
+#print(len(multi_weather), "-> number of weather objects")
+#print((multi_weather), "multi_weather")
 vector_coll = {}
+calm_list = []
 
 # Collecting calm vectors in dictionary
 # For loop to find the longest calms per weather object
 
 for i in range(len(multi_weather)):
 
-    # print(multi_weather[i].data['v_wind'])
+    #print(multi_weather[i].data['v_wind'])
 
     calm, = np.where(multi_weather[i].data['v_wind'] < 3)
     vector_coll = np.split(calm, np.where(np.diff(calm) != 1)[0] + 1)
     vc = vector_coll
     calm = len(max(vc, key=len))
-    calm_list = np.matrix(calm)
-    multi_weather[i].geometry
-    #print(calm_list)
+#    multi_weather[i].geometry
+    calm_list = np.append(calm_list, calm)
+
+# print(calm_list)
 
 # Germany dena_18 regions (ZNES)
 
@@ -91,37 +95,35 @@ germany = {
 
 coastdat_de = fetch_geometries(**coastdat_de)
 coastdat_de['geom'] = geoplot.postgis2shapely(coastdat_de.geom)
-
+#print((coastdat_de), "coastdat")
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
 
 #print(geom)
 #print(coastdat_de['geom'])
 
-# random example polygons
-#geom_2 = geopy.Polygon([(14.2, 52.2), (14.2, 51.6), (15.2, 51.6), (15.2, 52.2)])
-#geom_3 = geopy.Polygon([(16.2, 52.2), (16.2, 51.6), (17.2, 51.6), (17.2, 52.2)])
-#geom_4 = geopy.Polygon([(14.2, 53.4), (14.2, 52.8), (15.2, 52.8), (15.2, 53.4)])
-#geom_5 = geopy.Polygon([(12.2, 53.4), (12.2, 52.8), (13.2, 52.8), (13.2, 53.4)])
-
-# data_example = {geom: 130, geom_2: 2}
-
-#data_example = [500, 1, 1, 1, 1]
 example = geoplot.GeoPlotter(coastdat_de['geom'], (3, 16, 47, 56),
                              data=np.random.rand(792))
-#data2 = np.random.rand(792)
-#print(data2)
+
 #example = geoplot.GeoPlotter([geom], (3, 20, 47, 60),
                              #data=data_example)
 example.cmapname = 'winter'
 example.cmapname = 'winter'
 example.plot(facecolor='#badd69', edgecolor='')
 
-# example.geometries = germany['geom']
+#example.geometries = germany['geom'] -> Netzregionen
 example.data = None
 example.plot(facecolor='', edgecolor='white', linewidth=2)
 
+# Build Dataframe including the calms and the geometry
+x = coastdat_de['geom']
+df = pd.DataFrame(data = calm_list, columns = ['calms'])
+df2 = pd.DataFrame(data = x, columns = ['geom'])
+
+df3 = pd.concat([df, df2], axis = 1)
+print(df3)
+
 plt.tight_layout()
 plt.box(on=None)
-plt.show()
+#plt.show()
 
