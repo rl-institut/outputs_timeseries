@@ -43,7 +43,7 @@ germany = {
 
 print('collecting weather objects...')
 #geometrie = shapefile.Reader("~/temp/deutschland.shp")
-year = 2014
+year = 2011
 conn = db.connection()
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
@@ -83,11 +83,13 @@ for i in range(len(multi_weather)):
     calm_list2 = np.log(calm_list) / np.log(calm_list.max(axis=0))
     calm_list3 = np.sort(calm_list)
 #np.save(calm_list, calm_list)
-print(calm_list3)
+#print(calm_list3)
 x = np.amax(calm_list)
 y = np.amin(calm_list)
-print(x)
-print(y)
+print()
+print('-> longest calm:', x, 'hours')
+print('-> shortest calm:', y, 'hours')
+print()
 
 plt.hist(calm_list3, normed=False, range=(calm_list3.min(),
      calm_list3.max()), log=True)
@@ -131,12 +133,17 @@ germany['geom'] = geoplot.postgis2shapely(germany.geom)
 
 # Build Dataframe including the calms and the geometry
 print('building Dataframe...')
+print()
 
 x = coastdat_de['geom']
 df = pd.DataFrame(data=calm_list2, columns=['calms'])
 df2 = pd.DataFrame(data=x, columns=['geom'])
 df3 = pd.concat([df, df2], axis=1)
 #print(df3)
+df4 = df.loc[df3['calms'] == 1]
+print(df4)
+print()
+
 
 example = geoplot.GeoPlotter(df3['geom'], (3, 16, 47, 56),
                                 data=df3['calms'])
@@ -152,7 +159,8 @@ example.plot(edgecolor='black', linewidth=1, alpha=1)
 print('creating plot...')
 plt.title('Longest calms Germany {0}'.format(year))
 example.draw_legend(legendlabel="Length of wind calms < 3 m/s in h",
-                     extend='neither', tick_list=[1, 10, 100, 1000, 5172])
+                     extend='neither', tick_list=[1, 10, 100, 1000,
+                     np.amax(calm_list)])
 
 example.basemap.drawcountries(color='white', linewidth=2)
 example.basemap.shadedrelief()
