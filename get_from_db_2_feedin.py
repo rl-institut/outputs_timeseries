@@ -50,7 +50,7 @@ germany['geom'] = geoplot.postgis2shapely(germany.geom)
 #print(germany['geom'])
 #geom = geopy.Polygon([(12.2, 52.2), (12.2, 51.6), (13.2, 51.6), (13.2, 52.2)])
 
-c = fiona.open('C:/temp/germany_and_offshore.shp')
+c = fiona.open('/home/caro/rliserver/04_Projekte/109_EOS/10-Stud_Ordner/Marco/shape/germany_and_offshore.shp')
 pol = c.next()
 geom = shape(pol['geometry'])
 
@@ -86,9 +86,9 @@ advent210 = {
 # Definition of the power plants
 E126_power_plant = plants.WindPowerPlant(**enerconE126)
 advent_module = plants.Photovoltaic(**advent210)
-wind_feedin = E126_power_plant.feedin(weather=my_weather,
-installed_capacity=1)
-pv_feedin = advent_module.feedin(weather=my_weather, peak_power=1)
+# wind_feedin = E126_power_plant.feedin(weather=my_weather,
+# installed_capacity=1)
+# pv_feedin = advent_module.feedin(weather=my_weather, peak_power=1)
 
 ########-------------------------------------------#############
 
@@ -105,8 +105,9 @@ calm_list = []
 # For loop to find the longest calms per weather object
 #print(wind_feedin)
 print('calculating calms...')
-for i in range(len(pv_feedin)):
+for i in range(len(multi_weather)):
 
+    pv_feedin = advent_module.feedin(weather=multi_weather[i], peak_power=1)
     calm, = np.where(pv_feedin[i] < 0.05)
     vector_coll = np.split(calm, np.where(np.diff(calm) != 1)[0] + 1)
     vc = vector_coll
@@ -115,6 +116,9 @@ for i in range(len(pv_feedin)):
 #    multi_weather[i].geometry
     calm_list = np.append(calm_list, calm)
     calm_list3 = np.sort(calm_list)
+    print('done_' + str(i))
+
+print('done')
 #np.save(calm_list, calm_list)
 #print(calm_list)
 x = np.amax(calm_list)
