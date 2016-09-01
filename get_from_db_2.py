@@ -8,10 +8,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 from shapely.geometry import shape
 import fiona
-from sklearn import preprocessing
-from matplotlib.colors import LogNorm
-import matplotlib.colors as colors
-from matplotlib.ticker import LogLocator
+
 
 def fetch_geometries(**kwargs):
     """Reads the geometry and the id of all given tables and writes it to
@@ -30,7 +27,7 @@ def fetch_geometries(**kwargs):
     return pd.DataFrame(results.fetchall(), columns=cols)
 
 print('please wait...')
-# multiweather prompt
+
 germany = {
     'table': 'deu3_21',
     'geo_col': 'geom',
@@ -43,7 +40,7 @@ germany = {
 
 print('collecting weather objects...')
 #geometrie = shapefile.Reader("~/temp/deutschland.shp")
-year = 2011
+year = 2014
 conn = db.connection()
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
@@ -63,7 +60,8 @@ my_weather = multi_weather[0]
 #print(my_weather.data)
 
 #print(len(multi_weather), "-> number of weather objects")
-#print((multi_weather), "multi_weather")
+
+print((multi_weather), "multi_weather")
 vector_coll = {}
 calm_list = []
 
@@ -140,8 +138,10 @@ df = pd.DataFrame(data=calm_list2, columns=['calms'])
 df2 = pd.DataFrame(data=x, columns=['geom'])
 df3 = pd.concat([df, df2], axis=1)
 #print(df3)
-df4 = df.loc[df3['calms'] == 1]
-print(df4)
+df4 = df3.loc[df3['calms'] == 1]
+coordinate = df4['geom']
+print('longest calm located in:')
+print(coordinate)
 print()
 
 
