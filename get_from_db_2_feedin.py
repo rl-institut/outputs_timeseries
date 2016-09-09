@@ -270,6 +270,10 @@ example.cmapname = 'inferno'
 #example.data = None
 example.plot(edgecolor='black', linewidth=1, alpha=1)
 
+example.geometries = germany_u['geom']
+example.data = None
+example.plot(facecolor='', edgecolor='white', linewidth=2)
+
 print('creating plot...')
 plt.title('Longest calms Germany {0}'.format(year))
 example.draw_legend(legendlabel="Length of wind calms < 5 % P_nenn in h",
@@ -277,9 +281,8 @@ example.draw_legend(legendlabel="Length of wind calms < 5 % P_nenn in h",
                           np.amax(calm_list) *0.5, np.amax(calm_list) *0.75,
                            np.amax(calm_list)])
 
-example.basemap.drawcountries(color='white', linewidth=2)
+# example.basemap.drawcountries(color='white', linewidth=2)
 example.basemap.shadedrelief()
 plt.tight_layout()
 plt.box(on=None)
 plt.show()
-
