@@ -14,17 +14,24 @@ from feedinlib import powerplants as plants
 import pickle
 from shapely.wkt import loads as load_wkt
 
-def fetch_geometries(**kwargs):
+
+def fetch_geometries(union=False, **kwargs):
     """Reads the geometry and the id of all given tables and writes it to
      the 'geom'-key of each branch of the data tree.
     """
-    sql_str = '''
-        SELECT {id_col}, ST_AsText(
-            ST_SIMPLIFY({geo_col},{simp_tolerance})) geom
-        FROM {schema}.{table}
-        WHERE "{where_col}" {where_cond}
-        ORDER BY {id_col} DESC;'''
-
+    if not union:
+        sql_str = '''
+            SELECT {id_col}, ST_AsText(
+                ST_SIMPLIFY({geo_col}, {simp_tolerance})) geom
+            FROM {schema}.{table}
+            WHERE "{where_col}" {where_cond}
+            ORDER BY {id_col} DESC;'''
+    else:
+        sql_str = '''
+            SELECT ST_AsText(
+                ST_SIMPLIFY(st_union({geo_col}), {simp_tolerance})) as geom
+            FROM {schema}.{table}
+            WHERE "{where_col}" {where_cond};'''
     db_string = sql_str.format(**kwargs)
     results = db.connection().execute(db_string)
     cols = results.keys()
