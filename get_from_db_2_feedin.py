@@ -39,7 +39,7 @@ def fetch_geometries(union=False, **kwargs):
 
 print('please wait...')
 
-germany = {
+germany_u = {
     'table': 'deu3_21',
     'geo_col': 'geom',
     'id_col': 'region_id',
@@ -59,23 +59,23 @@ year = 2012
 
 
 conn = db.connection()
-germany = fetch_geometries(**germany)
-germany['geom'] = geoplot.postgis2shapely(germany.geom)
+germany_u = fetch_geometries(union=True, **germany_u)
+germany_u['geom'] = geoplot.postgis2shapely(germany_u.geom)
 #print(germany)
 #print(germany['geom'])
 #geom = geopy.Polygon([(12.2, 52.2), (12.2, 51.6), (13.2, 51.6), (13.2, 52.2)])
 
-c = fiona.open('C:/temp/germany_and_offshore.shp')
-pol = c.next()
-#print(pol['geometry'])
-geom = shape(pol['geometry'])
+# c = fiona.open('C:/temp/germany_and_offshore.shp')
+# pol = c.next()
+# #print(pol['geometry'])
+# geom = shape(pol['geometry'])
 #print(geom)
 
 
 #use pickle to save or load the weather objects
 #multi_weather = pickle.load(open('multi_weather_save.p', 'rb'))
-multi_weather = coastdat.get_weather(conn, geom, year)
-my_weather = multi_weather[0]
+multi_weather = coastdat.get_weather(conn, germany_u['geom'][0], year)
+# my_weather = multi_weather[0]
 
 #pickle.dump(multi_weather, open('multi_weather_save.p', 'wb'))
 
