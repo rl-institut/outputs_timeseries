@@ -225,9 +225,10 @@ print()
 
 #punkt = multi_weather[number].geometry
 
-#conn = db.connection()
-#my_weather = coastdat.get_weather(
-#    conn, geopy.Mulitpolygon(punkt), year)
+my_weather = coastdat.get_weather(
+   conn, coordinate.iloc[0].centroid, year)
+my_weather.data.v_wind.plot()
+plt.show()
 
 #geo = geopy.Polygon(coordinate)
 #multi_weather = coastdat.get_weather(conn, geo, year)
