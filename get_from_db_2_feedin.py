@@ -158,7 +158,7 @@ plt.hist(calm_list3, normed=False, range=(calm_list.min(),
 plt.xlabel('length of calms in hours')
 plt.ylabel('number of calms')
 plt.title('calm histogram Germany{0}'.format(year))
-#plt.show()
+plt.show()
 
 #print(multi_weather.data)
 
