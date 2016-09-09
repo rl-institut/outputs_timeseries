@@ -1,5 +1,6 @@
 import oemof.db as db
 from shapely import geometry as geopy
+from shapely.geometry import Polygon
 from oemof.db import coastdat
 import pandas as pd
 import numpy as np
@@ -11,6 +12,7 @@ import fiona
 from oemof import db
 from feedinlib import powerplants as plants
 import pickle
+from shapely.wkt import loads as load_wkt
 
 def fetch_geometries(**kwargs):
     """Reads the geometry and the id of all given tables and writes it to
@@ -42,7 +44,13 @@ germany = {
 
 print('collecting weather objects...')
 #geometrie = shapefile.Reader("~/temp/deutschland.shp")
-year = 2007
+
+#years = [2007, 2010, 2011]
+#for year in years:
+#my_weather = []
+year = 2012
+
+
 conn = db.connection()
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
@@ -52,15 +60,17 @@ germany['geom'] = geoplot.postgis2shapely(germany.geom)
 
 c = fiona.open('C:/temp/germany_and_offshore.shp')
 pol = c.next()
+#print(pol['geometry'])
 geom = shape(pol['geometry'])
+#print(geom)
 
 
 #use pickle to save or load the weather objects
-multi_weather = pickle.load(open('multi_weather_save.p', 'rb'))
-#multi_weather = coastdat.get_weather(conn, geom, year)
+#multi_weather = pickle.load(open('multi_weather_save.p', 'rb'))
+multi_weather = coastdat.get_weather(conn, geom, year)
 my_weather = multi_weather[0]
 
-pickle.dump(multi_weather, open('multi_weather_save.p', 'wb'))
+#pickle.dump(multi_weather, open('multi_weather_save.p', 'wb'))
 
 ##########-------feedinlib Components--------------------------################
 
@@ -97,7 +107,7 @@ advent_module = plants.Photovoltaic(**advent210)
 ########----------------------------------------------------------#############
 
 
-#print(my_weather.geometry)
+
 #print(my_weather.data)
 
 #print(len(multi_weather), "-> number of weather objects")
@@ -126,9 +136,9 @@ for i in range(len(multi_weather)):
     calm_list = np.append(calm_list, calm)
     calm_list2 = (calm_list) / (calm_list.max(axis=0))
     calm_list3 = np.sort(calm_list)
-    print('done_' + str(i))
+#    print('done_' + str(i))
 #np.save(calm_list, calm_list)
-print(calm_list)
+#print(calm_list)
 x = np.amax(calm_list)
 y = np.amin(calm_list)
 print()
@@ -141,7 +151,7 @@ plt.hist(calm_list3, normed=False, range=(calm_list.min(),
 plt.xlabel('length of calms in hours')
 plt.ylabel('number of calms')
 plt.title('calm histogram Germany{0}'.format(year))
-plt.show()
+#plt.show()
 
 #print(multi_weather.data)
 
@@ -180,42 +190,60 @@ germany['geom'] = geoplot.postgis2shapely(germany.geom)
 print('building Dataframe...')
 print()
 
+d = {'id': np.arange(792), 'calms': calm_list2}
+
 x = coastdat_de['geom']
-df = pd.DataFrame(data=calm_list2, columns=['calms'])
+df = pd.DataFrame(data=d)
+#print(df)
 df2 = pd.DataFrame(data=x, columns=['geom'])
 df3 = pd.concat([df, df2], axis=1)
 #print(df3)
 df4 = df3.loc[df3['calms'] == 1]
+#df4.set_index([df.index,'geom'])
 coordinate = df4['geom']
+id_row = df4[df4['geom']==coordinate]
+#print('id_row')
+#print(id_row)
+number = id_row.values[0][1]
+#number2 = id_row.values[1]
+#print('number:')
+#print(number)
+#print(number2)
 print('longest calm located in:')
 print(coordinate)
-#print()
+print()
+#print(points)
 
 ######-----------------Point analysis----------------------------------########
 
-conn = db.connection()
-my_weather = coastdat.get_weather(
-    conn, geopy.point(df3['geom'], year))
+#punkt = multi_weather[number].geometry
 
+#conn = db.connection()
+#my_weather = coastdat.get_weather(
+#    conn, geopy.Mulitpolygon(punkt), year)
+
+#geo = geopy.Polygon(coordinate)
+#multi_weather = coastdat.get_weather(conn, geo, year)
+#my_weather = multi_weather[number]
 
 # Reshape data into matrix
-matrix_wind = []
+#matrix_wind = []
 #total_power = wind_feedin + pv_feedin
-matrix_wind = np.reshape(wind_feedin, (365, 24))
-a = np.transpose(matrix_wind)
-b = np.flipud(a)
-fig, ax = plt.subplots()
+#matrix_wind = np.reshape(wind_feedin, (365, 24))
+#a = np.transpose(matrix_wind)
+#b = np.flipud(a)
+#fig, ax = plt.subplots()
 
 # Plot image
-plt.imshow(b, cmap='afmhot', interpolation='nearest',
-     origin='lower', aspect='auto', vmax=0.1)
+#plt.imshow(b, cmap='afmhot', interpolation='nearest',
+#     origin='lower', aspect='auto', vmax=0.1)
 
-plt.title('Osnabrück {0} Wind and PV feedin(nominal power <5 %)'.format(year))
-ax.set_xlabel('days of year')
-ax.set_ylabel('hours of day')
-clb = plt.colorbar()
-clb.set_label('P_Wind + P_PV')
-plt.show()
+#plt.title('Osnabrück {0} Wind and PV feedin(nominal power <5 %)'.format(year))
+#ax.set_xlabel('days of year')
+#ax.set_ylabel('hours of day')
+#clb = plt.colorbar()
+#clb.set_label('P_Wind + P_PV')
+#plt.show()
 
 #######---------------------------------------------------------------#########
 
