@@ -5,15 +5,20 @@ from oemof.db import coastdat
 from feedinlib import powerplants as plants
 import numpy as np
 import matplotlib.pyplot as plt
-
-year = 2007
+from geopy.geocoders import Nominatim
+import matplotlib
+year = 2000
 
 
 location = {
-    'tz': 'Europe/Osnabrück',
-    'latitude': 52.279,
-    'longitude': 8.043
+    'tz': 'Europe/Parchim',
+    'latitude': 50.99787380076216,
+    'longitude': 13.71091247271507
     }
+
+#geolocator = Nominatim()
+#location_geo = geolocator.reverse("53.41, 11.84")
+#print(location_geo.address)
 
 # Specific tion of the weather data set CoastDat2
 coastDat2 = {
@@ -51,31 +56,40 @@ print(location['longitude'])
 E126_power_plant = plants.WindPowerPlant(**enerconE126)
 advent_module = plants.Photovoltaic(**advent210)
 wind_feedin = E126_power_plant.feedin(weather=my_weather,
-installed_capacity=0.5)
-pv_feedin = advent_module.feedin(weather=my_weather, peak_power=0.5)
+installed_capacity=1)
+pv_feedin = advent_module.feedin(weather=my_weather, peak_power=1)
+
+
+
+# Find all calms a < x and put it into the dictionary
+
+vector_coll = {}
+calm_list = []
+calm, = np.where(pv_feedin < 0.05)
+vector_coll = np.split(calm, np.where(np.diff(calm) != 1)[0] + 1)
+vc = vector_coll
+calm = len(max(vc, key=len))
+print(calm)
+
+#    calm_list = np.append(calm_list, calm)
 
 # Reshape data into matrix
 matrix_wind = []
-total_power = wind_feedin + pv_feedin
-matrix_wind = np.reshape(total_power, (365, 24))
+#total_power = wind_feedin + pv_feedin
+matrix_wind = np.reshape(pv_feedin, (366, 24))
 a = np.transpose(matrix_wind)
 b = np.flipud(a)
 fig, ax = plt.subplots()
-
-
-#print(b)
-#print(pv_feedin)
-#print(wind_feedin)
-
 
 # Plot image
 plt.imshow(b, cmap='afmhot', interpolation='nearest',
      origin='lower', aspect='auto', vmax=0.05)
 
-plt.title('Osnabrück {0} Wind and PV feedin(nominal power <5 %)'.format(year))
+plt.title('Parchim, MV, Ger 2007 PV feedin (nominal power <5 %)longest calm {0} hours'.format(calm))
 ax.set_xlabel('days of year')
 ax.set_ylabel('hours of day')
 clb = plt.colorbar()
-clb.set_label('P_Wind + P_PV')
+clb.set_label('P_Wind')
+#matplotlib.figure.Figure.text('test')
 plt.show()
 
