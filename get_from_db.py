@@ -1,4 +1,4 @@
-import shapefile
+#import shapefile
 import oemof.db as db
 from shapely import geometry as geopy
 from oemof.db import coastdat
@@ -37,31 +37,34 @@ germany = {
     }
 
 # geometrie = shapefile.Reader('~/temp/deutschland.shp')
-year = 2010
+year = 2000
 conn = db.connection()
 germany = fetch_geometries(**germany)
 germany['geom'] = geoplot.postgis2shapely(germany.geom)
+
 # print(germany)
 # print(germany['geom'])
 geom = geopy.Polygon([(12.2, 52.2), (12.2, 51.6), (13.2, 51.6), (13.2, 52.2)])
 multi_weather = coastdat.get_weather(conn, geom, year)
 my_weather = multi_weather[0]
+
 # print(my_weather.data)
-print(len(multi_weather))
+print((len(multi_weather)), "number of weather objects")
 vector_coll = {}
 
 # Collecting vectors in dictionary
-# Calm less than value
-# El Schleifo
+# For loop to find the longest calms
+
 for i in range(len(multi_weather)):
 
-    print(multi_weather[i].data['v_wind'])
+    #print(multi_weather[i].data['v_wind'])
 
     calm, = np.where(multi_weather[i].data['v_wind'] < 3)
     vector_coll = np.split(calm, np.where(np.diff(calm) != 1)[0] + 1)
     vc = vector_coll
+    calm = []
     calm = len(max(vc, key=len))
-print(calm)
+print((calm), "list of longest calms")
 
 # Germany dena_18 regions (ZNES)
 
@@ -102,5 +105,5 @@ example.plot(facecolor='', edgecolor='white', linewidth=2)
 
 plt.tight_layout()
 plt.box(on=None)
-plt.show()
+#plt.show()
 
