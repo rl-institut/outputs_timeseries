@@ -64,6 +64,8 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
 
     logging.info('Create oemof objects')
     # create gas bus
+
+    grid_share = 0.05
     bgas = solph.Bus(label="natural_gas")
 
     # create electricity bus
@@ -72,9 +74,10 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
     # create excess component for the electricity bus to allow overproduction
     solph.Sink(label='excess_bel', inputs={bel: solph.Flow()})
 
-    # create commodity object for gas resource
-    solph.Source(label='rgas', outputs={bgas: solph.Flow(
-        nominal_value=194397000 * number_timesteps / 8760, summed_max=1)})
+    # Create commodity object for import electricity resource
+    solph.Source(label='gridsource', outputs={bel: solph.Flow(
+        nominal_value=2255*1e6 * grid_share * number_timesteps / 8760,
+        summed_max=1)})
 
     # create fixed source object for wind
     solph.Source(label='wind', outputs={bel: solph.Flow(
