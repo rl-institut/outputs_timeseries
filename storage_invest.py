@@ -157,16 +157,27 @@ def get_result_dict(energysystem):
                             date_from='2012-01-01 00:00:00',
                             date_to='2012-12-31 23:00:00')
 
-    return {'pp_gas_sum': pp_gas.sum(),
-            'demand_sum': demand.sum(),
-            'demand_max': demand.max(),
-            'wind_sum': wind.sum(),
-            'wind_inst': wind.max()/0.99989,
-            'pv_sum': pv.sum(),
-            'pv_inst': pv.max()/0.76474,
-            'storage_cap': energysystem.results[storage][storage].invest,
-            'objective': energysystem.results.objective
-            }
+    storage_input = myresults.slice_by(obj_label='storage', type='from_bus',
+                                   date_from='2012-01-01 00:00:00',
+                                   date_to='2012-12-31 23:00:00')
+
+    storage_output = myresults.slice_by(obj_label='storage', type='to_bus',
+                                    date_from='2012-01-01 00:00:00',
+                                    date_to='2012-12-31 23:00:00')
+
+    storage_soc = myresults.slice_by(obj_label='storage', type='other',
+                                 date_from='2012-01-01 00:00:00',
+                                 date_to='2012-12-31 23:00:00')
+
+    results_dc = {}
+    results_dc['ts_storage_input'] = storage_input
+    results_dc['ts_storage_output'] = storage_output
+    results_dc['ts_storage_soc'] = storage_soc
+    results_dc['storage_cap'] = energysystem.results[
+        storage][storage].invest
+    results_dc['objective'] = energysystem.results.objective
+
+    return results_dc
 
 
 def create_plots(energysystem):
@@ -232,8 +243,16 @@ def run_storage_invest_example():
     # esys.dump()
     # esys.restore()
     import pprint as pp
-    pp.pprint(get_result_dict(esys))
-    create_plots(esys)
+    results = get_result_dict(esys)
+
+    # Print some results
+    print(results['ts_storage_soc'])
+    print(results('storage_cap'))
+
+    # Write results to csv
+    results['ts_storage_soc'].to_csv('ts_storage_soc.csv')
+
+    # create_plots(esys)
 
 
 if __name__ == "__main__":
