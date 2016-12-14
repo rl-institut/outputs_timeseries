@@ -61,11 +61,13 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
     ##########################################################################
     # Create oemof object
     ##########################################################################
+    consumption = 2255 * 1e6
+    wind_installed = 1000 * 1e3
+    pv_installed = 582 * 1e3
+    grid_share = 0.05
 
     logging.info('Create oemof objects')
     # create gas bus
-
-    grid_share = 0.05
     bgas = solph.Bus(label="natural_gas")
 
     # create electricity bus
@@ -76,17 +78,17 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
 
     # Create commodity object for import electricity resource
     solph.Source(label='gridsource', outputs={bel: solph.Flow(
-        nominal_value=2255*1e6 * grid_share * number_timesteps / 8760,
+        nominal_value=consumption * grid_share * number_timesteps / 8760,
         summed_max=1)})
 
     # create fixed source object for wind
     solph.Source(label='wind', outputs={bel: solph.Flow(
-        actual_value=data['wind'], nominal_value=1000000, fixed=True,
+        actual_value=data['wind'], nominal_value=wind_installed, fixed=True,
         fixed_costs=20)})
 
     # create fixed source object for pv
     solph.Source(label='pv', outputs={bel: solph.Flow(
-        actual_value=data['pv'], nominal_value=582000, fixed=True,
+        actual_value=data['pv'], nominal_value=pv_installed, fixed=True,
         fixed_costs=15)})
 
     # create simple sink object for demand
