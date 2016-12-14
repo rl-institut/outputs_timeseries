@@ -250,7 +250,7 @@ def run_storage_invest_example():
 
     # Print some results
     print(results['ts_storage_soc'])
-    print(results('storage_cap'))
+    print(results['storage_cap'])
 
     # Write results to csv
     results['ts_storage_soc'].to_csv('ts_storage_soc.csv')
