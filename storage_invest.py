@@ -90,7 +90,7 @@ pv_feedin = yingli_module.feedin(weather=my_weather, peak_power=1)
 def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
                           debug=True, number_timesteps=8760, tee_switch=True):
     logging.info('Initialize the energy system')
-    date_time_index = pd.date_range('1/1/2012', periods=number_timesteps,
+    date_time_index = pd.date_range('1/1/' + str(year), periods=number_timesteps,
                                     freq='H')
 
     energysystem = solph.EnergySystem(timeindex=date_time_index)
@@ -187,33 +187,29 @@ def get_result_dict(energysystem):
     storage = energysystem.groups['storage']
     myresults = outputlib.DataFramePlot(energy_system=energysystem)
 
-    pp_gas = myresults.slice_by(obj_label='pp_gas', type='to_bus',
-                                date_from='2012-01-01 00:00:00',
-                                date_to='2012-12-31 23:00:00')
-
     demand = myresults.slice_by(obj_label='demand',
-                                date_from='2012-01-01 00:00:00',
-                                date_to='2012-12-31 23:00:00')
+                                date_from=str(year)+'-01-01 00:00:00',
+                                date_to=str(year)+'-12-31 23:00:00')
 
     wind = myresults.slice_by(obj_label='wind',
-                              date_from='2012-01-01 00:00:00',
-                              date_to='2012-12-31 23:00:00')
+                              date_from=str(year)+'-01-01 00:00:00',
+                              date_to=str(year)+'-12-31 23:00:00')
 
     pv = myresults.slice_by(obj_label='pv',
-                            date_from='2012-01-01 00:00:00',
-                            date_to='2012-12-31 23:00:00')
+                            date_from=str(year)+'-01-01 00:00:00',
+                            date_to=str(year)+'-12-31 23:00:00')
 
     storage_input = myresults.slice_by(obj_label='storage', type='from_bus',
-                                   date_from='2012-01-01 00:00:00',
-                                   date_to='2012-12-31 23:00:00')
+                                   date_from=str(year)+'-01-01 00:00:00',
+                                   date_to=str(year)+'-12-31 23:00:00')
 
     storage_output = myresults.slice_by(obj_label='storage', type='to_bus',
-                                    date_from='2012-01-01 00:00:00',
-                                    date_to='2012-12-31 23:00:00')
+                                    date_from=str(year)+'-01-01 00:00:00',
+                                    date_to=str(year)+'-12-31 23:00:00')
 
     storage_soc = myresults.slice_by(obj_label='storage', type='other',
-                                 date_from='2012-01-01 00:00:00',
-                                 date_to='2012-12-31 23:00:00')
+                                 date_from=str(year)+'-01-01 00:00:00',
+                                 date_to=str(year)+'-12-31 23:00:00')
 
     results_dc = {}
     results_dc['ts_storage_input'] = storage_input
@@ -240,10 +236,10 @@ def create_plots(energysystem):
     # Plotting the input flows of the electricity bus for January
     myplot = outputlib.DataFramePlot(energy_system=energysystem)
     myplot.slice_unstacked(bus_label="electricity", type="to_bus",
-                           date_from="2012-01-01 00:00:00",
-                           date_to="2012-01-31 00:00:00")
+                           date_from=str(year)+'-01-01 00:00:00',
+                           date_to=str(year)+'-01-31 00:00:00')
     colorlist = myplot.color_from_dict(cdict)
-    myplot.plot(color=colorlist, linewidth=2, title="January 2012")
+    myplot.plot(color=colorlist, linewidth=2, title='January'+str(year))
     myplot.ax.legend(loc='upper right')
     myplot.ax.set_ylabel('Power in MW')
     myplot.ax.set_xlabel('Date')
@@ -271,8 +267,8 @@ def create_plots(energysystem):
         lineorder=['demand', 'storage', 'excess_bel'],
         line_kwa={'linewidth': 4},
         ax=fig.add_subplot(1, 1, 1),
-        date_from="2012-06-01 00:00:00",
-        date_to="2012-06-8 00:00:00",
+        date_from=str(year)+'-06-01 00:00:00',
+        date_to=str(year)+'-06-8 00:00:00',
         )
     myplot.ax.set_ylabel('Power in MW')
     myplot.ax.set_xlabel('Date')
@@ -296,7 +292,8 @@ def run_storage_invest_example():
     print(results['storage_cap'])
 
     # Write results to csv
-    results['ts_storage_soc'].to_csv('ts_storage_soc.csv')
+    results['ts_storage_input'].to_csv('ts_storage_input_' + str(year) + '.csv')
+    results['ts_storage_soc'].to_csv('ts_storage_soc_' + str(year) + '.csv')
 
     # create_plots(esys)
 
