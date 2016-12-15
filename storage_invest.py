@@ -44,7 +44,48 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import oemof.solph as solph
+from oemof import db
+from oemof.db import coastdat
+from shapely import geometry as geopy
+from feedinlib import powerplants as plants
 
+year = 2014
+
+conn = db.connection()
+my_weather = coastdat.get_weather(
+conn, geopy.Point(8.043, 52.279), year)
+
+coastDat2 = {
+       'dhi': 0,
+       'dirhi': 0,
+       'pressure': 0,
+       'temp_air': 2,
+       'v_wind': 100,
+       'Z0': 0}
+
+yingli210 = {
+       'module_name': 'Yingli_YL210__2008__E__',
+       'azimuth': 180,
+       'tilt': 30,
+       'albedo': 0.2}
+
+enerconE126 = {
+       'h_hub': 135,
+       'd_rotor': 127,
+       'wind_conv_type': 'ENERCON E 126 7500',
+       'data_height': coastDat2}
+
+E126_power_plant = plants.WindPowerPlant(**enerconE126)
+yingli_module = plants.Photovoltaic(**yingli210)
+
+wind_feedin = E126_power_plant.feedin(weather=my_weather,
+installed_capacity=1)
+pv_feedin = yingli_module.feedin(weather=my_weather, peak_power=1)
+
+
+#conn = db.connection()
+#pol = c.next()
+#multi_weather = coastdat.get_weather(conn, germany_u['geom'][0], year)
 
 def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
                           debug=True, number_timesteps=8760, tee_switch=True):
@@ -83,12 +124,12 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
 
     # create fixed source object for wind
     solph.Source(label='wind', outputs={bel: solph.Flow(
-        actual_value=data['wind'], nominal_value=wind_installed, fixed=True,
+        actual_value=wind_feedin, nominal_value=wind_installed, fixed=True,
         fixed_costs=20)})
 
     # create fixed source object for pv
     solph.Source(label='pv', outputs={bel: solph.Flow(
-        actual_value=data['pv'], nominal_value=pv_installed, fixed=True,
+        actual_value=pv_feedin, nominal_value=pv_installed, fixed=True,
         fixed_costs=15)})
 
     # create simple sink object for demand
