@@ -98,6 +98,7 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
     # Read data file
     full_filename = os.path.join(os.path.dirname(__file__), filename)
     data = pd.read_csv(full_filename, sep=",")
+    data_demand = data['demand_el']/data['demand_el'].sum()
 
     ##########################################################################
     # Create oemof object
@@ -134,14 +135,7 @@ def optimise_storage_size(filename="storage_invest.csv", solvername='cbc',
 
     # create simple sink object for demand
     solph.Sink(label='demand', inputs={bel: solph.Flow(
-        actual_value=data['demand_el'], fixed=True, nominal_value=1)})
-
-    # create simple transformer object for gas powerplant
-    solph.LinearTransformer(
-        label="pp_gas",
-        inputs={bgas: solph.Flow()},
-        outputs={bel: solph.Flow(nominal_value=10e10, variable_costs=50)},
-        conversion_factors={bel: 0.58})
+        actual_value=data_demand, fixed=True, nominal_value=consumption)})
 
     # Calculate ep_costs from capex to compare with old solph
     capex = 1000
@@ -229,7 +223,7 @@ def create_plots(energysystem):
     cdict = {'wind': '#5b5bae',
              'pv': '#ffde32',
              'storage': '#42c77a',
-             'pp_gas': '#636f6b',
+             'gridsource': '#636f6b',
              'demand': '#ce4aff',
              'excess_bel': '#555555'}
 
@@ -263,7 +257,7 @@ def create_plots(energysystem):
 
     handles, labels = myplot.io_plot(
         bus_label='electricity', cdict=cdict,
-        barorder=['pv', 'wind', 'pp_gas', 'storage'],
+        barorder=['pv', 'wind', 'gridsource', 'storage'],
         lineorder=['demand', 'storage', 'excess_bel'],
         line_kwa={'linewidth': 4},
         ax=fig.add_subplot(1, 1, 1),
